@@ -8,6 +8,10 @@ use gpui::{
 
 use crate::{AxisExt as _, Side, theme::ActiveTheme as _};
 
+// A finger needs a much wider grab area than a cursor does.
+#[cfg(target_os = "ios")]
+pub(crate) const HANDLE_PADDING: Pixels = px(14.);
+#[cfg(not(target_os = "ios"))]
 pub(crate) const HANDLE_PADDING: Pixels = px(4.);
 pub(crate) const HANDLE_SIZE: Pixels = px(1.);
 
