@@ -104,7 +104,7 @@ pub use ::gpui;
 pub mod test;
 
 pub use ::gpui_base as base;
-#[cfg(not(any(target_os = "ios", target_os = "android")))]
+#[cfg(not(target_os = "android"))]
 pub use ::gpui_platform as platform;
 #[cfg(target_family = "wasm")]
 pub use ::gpui_web as web;
@@ -144,8 +144,9 @@ pub use ::gpui_component as component;
 #[cfg(feature = "assets")]
 pub use ::gpui_kit_assets as assets;
 
-// Mobile applications provide their platform with `Application::with_platform`.
-#[cfg(not(any(target_os = "ios", target_os = "android")))]
+// iOS goes through `gpui_platform` like every other desktop platform (it resolves to `gpui_ios`);
+// only Android, which has no backend, still has to supply its own with `Application::with_platform`.
+#[cfg(not(target_os = "android"))]
 pub use ::gpui_platform::application;
 
 /// Initializes every enabled layer. Call it once, before using anything else.
