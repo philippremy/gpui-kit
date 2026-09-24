@@ -10,6 +10,7 @@ use gpui::{
     Render, ScrollHandle, ScrollWheelEvent, SharedString, Styled as _, Subscription,
     UTF16Selection, Window, actions, div, point, prelude::FluentBuilder as _, px,
 };
+use gpui::{Autocapitalize, TextInputAction, TextInputConfiguration};
 use ropey::{Rope, RopeSlice};
 use serde::Deserialize;
 use std::borrow::Cow;
@@ -3687,6 +3688,38 @@ impl<M: InputModeKind> EntityInputHandler for InputBaseState<M> {
             range: self.range_to_utf16(&self.selected_range()),
             reversed: false,
         })
+    }
+
+    // The platform text-input protocol (iOS `UITextInput`) needs the document's extent and whether
+    // this field takes text before it will show a keyboard / route typing here at all; gpui's
+    // defaults (`None` / `true`) leave a field unreachable on such platforms.
+    fn text_length_utf16(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> Option<usize> {
+        Some(self.offset_to_utf16(self.text.len()))
+    }
+
+    fn accepts_text_input(&self, _window: &mut Window, _cx: &mut Context<Self>) -> bool {
+        self.is_editable()
+    }
+
+    fn text_input_configuration(
+        &mut self,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> TextInputConfiguration {
+        // Masked values and source code must not be autocorrected, suggested or capitalised.
+        if self.masked || M::CODE_EDITOR {
+            return TextInputConfiguration::default();
+        }
+        TextInputConfiguration {
+            autocorrect: true,
+            autocapitalize: Autocapitalize::Sentences,
+            suggestions: true,
+            input_action: if M::MULTI_LINE {
+                TextInputAction::Enter
+            } else {
+                TextInputAction::Done
+            },
+        }
     }
 
     fn marked_text_range(
